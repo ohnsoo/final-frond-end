@@ -74,29 +74,66 @@ const Checkout = () => {
             return;
         }
 
+        if (!cartItems || cartItems.length === 0) {
+            toast.error("Keranjang belanja kosong");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
-            // Simulate processing delay
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            if (!user) throw new Error("User not found");
 
-            // Clear cart
-            if (user) {
-                const { error } = await supabase
-                    .from("cart_items")
-                    .delete()
-                    .eq("user_id", user.id);
+            const totalAmount = totalPrice + 1000; // Including service fee
 
-                if (error) throw error;
+            // 1. Create Order
+            const { data: orderData, error: orderError } = await supabase
+                .from("orders")
+                .insert({
+                    user_id: user.id,
+                    total_amount: totalAmount,
+                    status: "pending",
+                    shipping_address: formData.address,
+                    shipping_name: formData.fullName,
+                    shipping_phone: formData.phone,
+                    payment_method: formData.paymentMethod,
+                })
+                .select()
+                .single();
 
-                queryClient.invalidateQueries({ queryKey: ["cart"] });
-                queryClient.invalidateQueries({ queryKey: ["cart-count"] });
-            }
+            if (orderError) throw orderError;
+
+            // 2. Create Order Items
+            const orderItems = cartItems.map((item) => ({
+                order_id: orderData.id,
+                product_id: item.product_id,
+                quantity: item.quantity || 1,
+                price: item.products?.price || 0,
+                seller_id: item.products?.seller_id,
+            }));
+
+            const { error: itemsError } = await supabase
+                .from("order_items")
+                .insert(orderItems);
+
+            if (itemsError) throw itemsError;
+
+            // 3. Clear Cart
+            const { error: clearCartError } = await supabase
+                .from("cart_items")
+                .delete()
+                .eq("user_id", user.id);
+
+            if (clearCartError) throw clearCartError;
+
+            // 4. Invalidate Queries
+            queryClient.invalidateQueries({ queryKey: ["cart"] });
+            queryClient.invalidateQueries({ queryKey: ["cart-count"] });
 
             setIsSuccess(true);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Checkout error:", error);
-            toast.error("Gagal memproses pesanan");
+            toast.error(`Gagal memproses pesanan: ${error.message}`);
         } finally {
             setIsLoading(false);
         }

@@ -1,4 +1,4 @@
-import { ShoppingCart, Heart, User, Search, Menu, LogOut, Package } from "lucide-react";
+import { ShoppingCart, Heart, User, Search, Menu, LogOut, Package, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -129,6 +129,10 @@ export const Navbar = () => {
                     <DropdownMenuItem onClick={() => navigate("/my-products")}>
                       <Package className="mr-2 h-4 w-4" />
                       Produk Saya
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/orders")}>
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      Pesanan Saya
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
