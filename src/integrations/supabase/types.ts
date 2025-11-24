@@ -133,12 +133,9 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
-          shipping_name: string
-          shipping_phone: string
-          status: string
-          total_amount: number
-          updated_at: string
-          user_id: string
+          phone?: string | null
+          updated_at?: string | null
+          username?: string | null
         }
         Relationships: []
       }
